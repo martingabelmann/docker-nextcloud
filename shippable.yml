@@ -1,17 +1,16 @@
 build:
   pre_ci:
-    - docker build -t test/owncloud:latest .
-    - docker rm -f oc || true
-    - docker run -d --name=oc test/owncloud:latest
+    - docker build -t test/nextcloud:latest .
+    - docker rm -f nc || true
+    - docker run -d --name=nc test/nextcloud:latest
   ci:
     - >
-      while ! docker logs --tail=5 oc |& grep 'Gratulations'; do
+      while ! docker logs --tail=5 nc |& grep 'Gratulations'; do
           sleep 1 && ((c=c+1)) && ((c!=40))
       done;
-    - docker logs oc
-    - docker exec oc occ "--no-ansi maintenance:install --database pgsql --database-name owncloud_db --database-user owncloud --database-pass changemepls --admin-user admin --admin-pass changemepls"
+    - docker logs nc
+    - docker exec nc occ --no-ansi maintenance:install --database pgsql --database-name owncloud_db --database-user owncloud --database-pass changemepls --admin-user admin --admin-pass changemepls
     - sleep 3
-    - docker exec oc occ "--no-ansi status"
-    - docker exec oc cat /var/log/postgresql/log
-    - docker exec oc cat /var/log/apache2/error.log
-    - docker exec oc cat /var/log/apache2/ssl_error.log
+    - docker exec nc occ --no-ansi status
+    - docker exec nc cat /var/log/apache2/error.log
+    - docker exec nc cat /var/log/apache2/ssl_error.log

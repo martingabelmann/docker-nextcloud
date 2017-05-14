@@ -6,7 +6,7 @@ ${D}AUTOCONFIG = array (
     "dbpass"        => "$DB_PASS",
     "dbhost"        => "$DB_HOST",
     "dbtableprefix" => "$DB_PREFIX",
-    "adminlogin"    => "$OC_ADMIN",
-    "adminpass"     => "$OC_ADMINPASS",
-    "directory"     => "$OC_DATADIR",
+    "adminlogin"    => "$NC_ADMIN",
+    "adminpass"     => "$NC_ADMINPASS",
+    "directory"     => "$NC_DATADIR",
 );

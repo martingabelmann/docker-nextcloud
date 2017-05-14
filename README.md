@@ -1,147 +1,97 @@
-# OwnCloud with Docker
+# yet another dockerized NextCloud
 _Based on Alpine_
-
-[![Run Status](https://api.shippable.com/projects/5787cdab3be4f4faa56ccc34/badge?branch=alpine)](https://app.shippable.com/projects/5787cdab3be4f4faa56ccc34)
-[![](https://images.microbadger.com/badges/image/martingabelmann/owncloud:alpine.svg)](http://microbadger.com/images/martingabelmann/owncloud:alpine "Get your own image badge on microbadger.com")
-[![](https://images.microbadger.com/badges/version/martingabelmann/owncloud:alpine.svg)](http://microbadger.com/images/martingabelmann/owncloud:alpine "Get your own version badge on microbadger.com")
 
 ---
 
- * [Features](#features)
- * [Installation](#basics)
- * [Backups](#backups)
- * [Testing](#testing)
- * [OwnCloud cli](#owncloud-cli)
-
 #### Features
- - Full owncloud instance
+ - Full nextcloud instance
  - OneClick/Run installation
  - Enforced ssl encryption 
- - Backup cronjobs
+ - small alpine base image
+ - php7 (including many modules)
+ - auto configuration via environment vars
 
 #### Installation
 Get the image:
 ```
-docker pull martingabelmann/owncloud
+docker pull martingabelmann/nextcloud
 ```
 
-It is highly recommended to use owncloud with SSL. The default Apache setting of this container forces the browser to use ``https://``. There are certificates build in the image for testing but in production you`ll have to use your own:
+It is highly recommended to use nextcloud with SSL. The default Apache setting of this container forces the browser to use ``https://``. There are certificates build in the image for testing but in production you`ll have to use your own:
 
 Assuming you are owning (trusted) ssl-certificates at 
- - ``/srv/docker/owncloud/ssl/server.key`` and 
- - ``/srv/docker/owncloud/ssl/server.crt``,
+ - ``/srv/docker/nextcloud/ssl/server.key`` and 
+ - ``/srv/docker/nextcloud/ssl/server.crt``,
  
 which belong to the domain ``example.org``,
 
 choose a good database- and adminpassword, then type:
   
 ```
-docker run --name=oc -d -p 443:443 -p 80:80 \
-  -e DB_PASS=changemepls -e OC_ADMINPASS=changemepls \
-  -e OC_DOMAIN=example.org -e OC_EMAIL=admin@example.org \
-  -v /srv/docker/owncloud/:/owncloud/ martingabelmann/owncloud:alpine
+docker run --name=nc -d -p 443:443 -p 80:80 \
+  -e DB_PASS=changemepls -e NC_ADMINPASS=changemepls \
+  -e NC_DOMAIN=example.org -e NC_EMAIL=admin@example.org \
+  -v /srv/docker/nextcloud/:/nextcloud/ martingabelmann/nextcloud
 ```
 
-This will mount and use the certificates. Your {data,config,additional apps} are stored on your host at ``/srv/docker/owncloud/{data,config,apps}`` and the postgres database at ``/srv/docker/owncloud/sql``. 
+This will mount and use the certificates. Your {data,config,additional apps} are stored on your host at ``/srv/docker/nextcloud/{data,config,apps}`` and the postgres database at ``/srv/docker/nextcloud/sql``. 
 
 
-Check ``docker logs oc`` to verify that everything is done. Then point your browser to ``https://example.org/``. On the first vistit/install Owncloud will do some configurations and directly login into to the admin panel.
+Check ``docker logs nc`` to verify that everything is done. Then point your browser to ``https://example.org/``. On the first vistit/install Nextcloud will do some configurations and directly login into to the admin panel.
 
 ##### Persistent configs
 **All** files locatet at ``/tpl`` are copied to the filesystems root ``/`` relative to ``/tpl/``. 
 For instance the preexisting file ``/tpl/etc/apache2/conf.d/httpd-vhosts.conf`` is copied to ``/etc/apache2/conf.d/httpd-vhosts.conf``.
 Simultaneously the installation uses the tool ``envsubst`` to replace all bash variables with variables passed with the ``-e`` option. 
-For php files this means, that you cannot simply write ``$phpvariable='"$OC_DOMAIN"';``, since the ``$phpvarvariable`` would be substituted too (with nothing if its not defined). 
-There is an exported variable ``${D}`` containing the dollar sign:  ``${D}phpvariable='"$OC_DOMAIN"';`` will lead to the desired result (e.g. ``$phpvariable='example.org';``).
+For php files this means, that you cannot simply write ``$phpvariable='"$NC_DOMAIN"';``, since the ``$phpvarvariable`` would be substituted too (with nothing if its not defined). 
+There is an exported variable ``${D}`` containing the dollar sign:  ``${D}phpvariable='"$NC_DOMAIN"';`` will lead to the desired result (e.g. ``$phpvariable='example.org';``).
 
 You can mount your own config into ``/tpl`` and use your own environment variables with ``-e``.  
   
-_Exception:_ the configs under ``/tpl/var/www/localhost/htdocs/config`` are only for new installs. For existing OwnCloud installations the files from ``/owncloud/config`` are used.
-
-#### Backups
-The image provides a script called ``backup`` which is used to tar the data, config, apps and sql directories into OC_BACKUP_DIR and extract existing tarfiles from there into the corresponig destinations.
-
-##### Manual
- - You can either join the containers bash with a
- ```
- docker exec -ti oc bash
- ```
- and run the ``backup [options]``-command from there or run it directly from the host:
- ``` 
- docker exec -ti oc backup [options]
- ```
- 
- - To perform a new backup run ``backup -b``. The file is placed into ``/backups`` and called like ``owncloud_yearmonthday_time.tar.gz``. Depending on the variable ``OC_BACKUP_FILES``  (default=1), old backupfiles will be deleted.
-
-
-##### Automatic
-The installscript is able to set a cronjob with that backup script. Because some people may have less storage it is disabled by default. To enable it just set the ``OC_BACKUP_CRON`` variable with the usual cron shurtcuts (see [here](http://fcron.free.fr/doc/en/fcrontab.5.html#AEN2144), e.g. to do a daily backup at midnight use 
-``-e OC_BACKUP_CRON='@midnight'``).
- 
- 
- Full example to store the last 2 backups done at every midnight:
-
-```
-docker run --name=oc -d -p 443:443 -p 80:80 \
-  -e DB_PASS=changemepls -e OC_ADMINPASS=changemepls \
-  -e OC_DOMAIN=example.org -e OC_EMAIL=admin@example.org \
-  -e OC_BACKUP_FILES=2 \
-  -e OC_BACKUP_CRON='@midnight' \
-  -v /srv/backups/owncloud:/backups/ \
-  -v /srv/docker/owncloud/:/owncloud martingabelmann/owncloud
-```
- 
-##### Restore
- - Get a list of all available backups with ``backup -l``,
- - copy the filename of your choise (including extension),
- - restore with ``backup -r filename.tar.gz``
-
-However I can not give full warranty that restoring backups will work in every situation! It passed my daily usage but in some special configurations you may have to use a external backup service.
+_Exception:_ the configs under ``/tpl/var/www/localhost/htdocs/config`` are only for new installs. For existing NextCloud installations the files from ``/nextcloud/config`` are used.
 
 #### Testing
-A minimal working owncloud instance can be run with
+A minimal working nextcloud instance can be run with
 
 ```
-docker run --name=octest -d -p 44300:443 -p 8000:80 martingabelmann/owncloud
+docker run --name=nctest -d -p 44300:443 -p 8000:80 martingabelmann/nextcloud
 ```
 Then point your browser to ``https://localhost:44300``. The container will use the build-in certificates, so be carefully, dont use this in public networks/production!
 
 Debuginformations can be viewed with
-```docker logs oc```
-or from inside the container (``docker exec -ti oc``) under ``/var/log/`` about apache, postgresql, cron and backups.
+```docker logs nc```
+or from inside the container (``docker exec -ti nc``) under ``/var/log/`` about apache or mysql.
 
 
-#### Owncloud cli
+#### Nextcloud cli
 
-OwnCloud offers the possibility to do administrative tasks via the command line interface `occ`. Just try it
+NextCloud offers the possibility to do administrative tasks via the command line interface `occ`. Just try it
 ```
-docker exec oc occ help
+docker exec -ti --user apache nc occ help
 ```
 
 
 #### Upgrades 
-### OwnCloud
-The used Owncloud instance is updated frequently due to the automated build (linked to alpine and the official owncloud image). Thus updates are performed by pulling the newest image, moving the running container and starting a new one. Since the apps arent effected they will be upgraded by the webinterface on the next visit or via the command line. 
+### NextCloud
+The used Nextcloud instance is updated frequently due to the automated build (linked to alpine). Thus updates are performed by pulling the newest image, moving the running container and starting a new one. Since the apps arent effected they will be upgraded by the webinterface on the next visit or via the command line. 
   
 I recommend to upgrade via `occ`:
 ```
-docker exec oc occ upgrade
+docker exec nc occ upgrade
 ```
 
-Sometimes it happens that a upgrade fails and breaks your OwnCloud webinterface because a app isnt compatible (or so). Then you have to disable the app with 
+Sometimes it happens that a upgrade fails and breaks your NextCloud webinterface because a app isnt compatible (or so). Then you have to disable the app with 
 ```
-docker exec oc occ app:disable APPNAME
+docker exec nc occ app:disable APPNAME
 ```
-you may ask which apps are broken. Find out by observing `/var/www/localhost/htdocs/data/owncloud.log``. Check a specific app with
+you may ask which apps are broken. Find out by observing `/var/www/localhost/htdocs/data/nextcloud.log``. Check a specific app with
 
 ```
-docker exec oc app:check APPNAME
+docker exec nc app:check APPNAME
 ``` 
 for compatiblity. If it fails, install the newest/compatible version by copying into `/var/www/localhost/htdocs/apps2/` (e.g. pulling from github). Afterwards try to enable it
 ```
-docker exec oc app:enable APPNAME
+docker exec nc app:enable APPNAME
 ```
 If everything was successful you should be able to visit the webinterface again.
-
-### Postgresql
-Upgrading to major postgres versions in a docker environment [can be very painful](https://github.com/docker-library/postgres/issues/37). I recommend to spawn an alpine container from the previous image, run pg_dumpall and import the dump manually with the newer postgres.
+  
