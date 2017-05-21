@@ -72,7 +72,8 @@ RUN /usr/bin/install -g apache -m 775  -d /run/apache2 &&\
     sed -i '/extension=apcu/a extension=apc\.so' /etc/php7/php.ini &&\
     sed -i '/apc\.enabled=1/a apc\.shm_size=64M' /etc/php7/conf.d/apcu.ini &&\
     sed -i '/apc\.shm_size=64M/a apc\.ttl=7200' /etc/php7/conf.d/apcu.ini &&\
-    sed -i '/apc\.ttl=7200/a apc\.enable_cli=1' /etc/php7/conf.d/apcu.ini
+    sed -i '/apc\.ttl=7200/a apc\.enable_cli=1' /etc/php7/conf.d/apcu.ini &&\
+    ln -s /var/www/localhost/htdocs/occ /usr/local/bin/occ
 
 ADD nc-install /usr/local/bin/nc-install
 ADD tpl /tpl
