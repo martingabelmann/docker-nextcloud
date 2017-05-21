@@ -1,5 +1,8 @@
 # yet another dockerized NextCloud
 _Based on Alpine_
+[![Run Status](https://api.shippable.com/projects/5921cc0abba6190600a365a2/badge?branch=master)](https://app.shippable.com/github/martingabelmann/docker-nextcloud)
+[![](https://images.microbadger.com/badges/image/martingabelmann/nextcloud.svg)](https://microbadger.com/images/martingabelmann/nextcloud "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/martingabelmann/nextcloud.svg)](https://microbadger.com/images/martingabelmann/nextcloud "Get your own version badge on microbadger.com")
 
 ---
 
