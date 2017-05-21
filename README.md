@@ -77,21 +77,21 @@ The used Nextcloud instance is updated frequently due to the automated build (li
   
 I recommend to upgrade via `occ`:
 ```
-docker exec nc occ upgrade
+docker exec --user apache nc occ upgrade
 ```
 
 Sometimes it happens that a upgrade fails and breaks your NextCloud webinterface because a app isnt compatible (or so). Then you have to disable the app with 
 ```
-docker exec nc occ app:disable APPNAME
+docker exec --user apache nc occ app:disable APPNAME
 ```
 you may ask which apps are broken. Find out by observing `/var/www/localhost/htdocs/data/nextcloud.log``. Check a specific app with
 
 ```
-docker exec nc app:check APPNAME
+docker exec --user apache nc app:check APPNAME
 ``` 
 for compatiblity. If it fails, install the newest/compatible version by copying into `/var/www/localhost/htdocs/apps2/` (e.g. pulling from github). Afterwards try to enable it
 ```
-docker exec nc app:enable APPNAME
+docker exec --user apache nc app:enable APPNAME
 ```
 If everything was successful you should be able to visit the webinterface again.
   
