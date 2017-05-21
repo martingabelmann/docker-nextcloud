@@ -9,7 +9,7 @@ build:
           sleep 1 && ((c=c+1)) && ((c!=40))
       done;
     - docker logs nc
-    - true || docker exec --user apache nc occ --no-ansi maintenance:install --database mysql --database-name nextcloud_db --database-user nextcloud --database-pass changemepls --admin-user admin --admin-pass changemepls
+    - docker exec --user apache nc occ --no-ansi maintenance:install --database mysql --database-name nextcloud_db --database-user nextcloud --database-pass changemepls --admin-user admin --admin-pass changemepls || true
     - sleep 3
     - docker exec --user apache nc occ --no-ansi status
     - docker exec nc cat /var/log/apache2/error.log
