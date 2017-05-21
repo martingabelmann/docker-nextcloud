@@ -37,7 +37,8 @@ ENV NC_VERSION="nextcloud-11.0.3" \
     NC_MAIL_SMTPPORT=465 \
     NC_MAIL_SMTPNAME=admin@localhost \
     NC_MAIL_SMTPSECURE=ssl \
-    NC_MAIL_SMTPPASSWORD=changemepls 
+    NC_MAIL_SMTPPASSWORD=changemepls \
+    PATH="$PATH:/var/www/localhost/htdocs/occ"
     
 RUN sed -i -e 's/v3\.5/edge/g' /etc/apk/repositories && apk update && apk upgrade &&\
     apk add tzdata openssl ca-certificates apache2 apache2-ssl gettext mariadb mariadb-client \
