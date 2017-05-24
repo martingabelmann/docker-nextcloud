@@ -1,7 +1,7 @@
 FROM alpine
 MAINTAINER martin@gabelmann.biz
 
-ENV NC_VERSION="nextcloud-11.0.3" \
+ENV NC_VERSION="nextcloud-12.0.0" \
     DB_TYPE=mysql \
     DB_HOST=localhost \
     DB_NAME=nextcloud_db \
