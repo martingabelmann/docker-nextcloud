@@ -55,7 +55,6 @@ RUN /usr/bin/install -g apache -m 775  -d /run/apache2 &&\
     tar --strip-components=1 -jxf /tmp/nextcloud.tar.bz2 -C "$NC_WWW" &&\
     chown -R apache:apache "$NC_WWW" &&\
     rm -f /tmp/nextcloud* &&\
-    sed -i '/Listen 80/a Listen 443' /etc/apache2/httpd.conf &&\
     sed -i '/proxy_module/s/^#//g' /etc/apache2/httpd.conf &&\
     sed -i '/proxy_connect_module/s/^#//g' /etc/apache2/httpd.conf &&\
     sed -i '/proxy_ftp_module/s/^#//g' /etc/apache2/httpd.conf &&\
