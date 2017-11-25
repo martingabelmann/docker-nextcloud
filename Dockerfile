@@ -44,7 +44,7 @@ RUN sed -i -e 's/v3\.5/edge/g' /etc/apk/repositories && apk update && apk upgrad
     php7 php7-apache2 php7-gd php7-memcached php7-imagick php7-bz2 php7-posix \
     php7-json php7-pdo_mysql php7-mcrypt php7-intl php7-apcu php7-openssl php7-fileinfo \
     php7-curl php7-zip php7-mbstring php7-dom php7-xmlreader php7-ctype php7-zlib \
-    php7-iconv php7-xmlrpc php7-simplexml php7-xmlwriter php7-pcntl 
+    php7-iconv php7-xmlrpc php7-simplexml php7-xmlwriter php7-pcntl php7-ldap
 VOLUME "/nextcloud"
 
 WORKDIR /var/www/localhost/htdocs
