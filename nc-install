@@ -9,80 +9,57 @@ start_db() {
     mysqld -u mysql --user=mysql --datadir="$DB_DATA_PATH"
 }
 
-link() {
-    if [ ! -L "$1" ]; then
-        if [ ! -d "$2" ] && [ -d "$1" ]; then
-            mv "$1" "$2"
-        fi
-        rm -rf "$1"
-        ln -s "$2" "$1"
-    fi
-}
+mkdir -p $DB_DATA_PATH
+chmod u=rwx,g-rwx,o-rwx $DB_DATA_PATH
+chown -R mysql:mysql $DB_DATA_PATH
 
-if [ "$DB_EXTERNAL" = false ]; then
+if [ ! -f "$DB_DATA_PATH/ibdata1" ]; then
+    
+    echo '### no local mariadb found ###'
+    echo '### installing database ###'
+    mysql_install_db --user=mysql --datadir="$DB_DATA_PATH"
+    echo '### starting database server ###'
+    mysqld_safe --datadir="$DB_DATA_PATH" --timezone="$NC_TIME" &
+    sleep 4
 
-    mkdir -p $DB_DATA_PATH
-    chmod u=rwx,g-rwx,o-rwx $DB_DATA_PATH
-    chown -R mysql:mysql $DB_DATA_PATH
-
-    if [ ! -f "$DB_DATA_PATH/ibdata1" ]; then
-        
-        echo '### no local mariadb found ###'
-        echo '### installing database ###'
-        mysql_install_db --user=mysql --datadir="$DB_DATA_PATH"
-        echo '### starting database server ###'
-        mysqld_safe --datadir="$DB_DATA_PATH" --timezone="$NC_TIME" &
-	sleep 4
-
-	echo '### create NextCloud Database and -user ###'
-        mysqladmin -u root password $DB_ROOT_PASS
-        echo -e "DELETE FROM mysql.user WHERE User='';\n
-        DROP DATABASE test;\n
-        CREATE USER $DB_USER@localhost IDENTIFIED BY '$DB_PASS';\n
-        CREATE DATABASE IF NOT EXISTS $DB_NAME;\n
-        GRANT ALL PRIVILEGES ON $DB_NAME.* TO $DB_USER@localhost IDENTIFIED BY '$DB_PASS';\n
-        FLUSH PRIVILEGES;" | mysql -u root --password=$DB_ROOT_PASS
-    else
-        echo '### existing postgres database found ###'
-	sed -i "s|max_allowed_packet\s*=\s*1M|max_allowed_packet = $MAX_ALLOWED_PACKET|g" /etc/mysql/my.cnf
-	sed -i "s|max_allowed_packet\s*=\s*16M|max_allowed_packet = $MAX_ALLOWED_PACKET|g" /etc/mysql/my.cnf
-        echo '### starting database server ###'
-        mysqld_safe --datadir="$DB_DATA_PATH" --timezone="$NC_TIME" &
-        sleep 2
-    fi 
-fi
+    echo '### create NextCloud Database and -user ###'
+    mysqladmin -u root password $DB_ROOT_PASS
+    echo -e "DELETE FROM mysql.user WHERE User='';\n
+    DROP DATABASE test;\n
+    CREATE USER $DB_USER@localhost IDENTIFIED BY '$DB_PASS';\n
+    CREATE DATABASE IF NOT EXISTS $DB_NAME;\n
+    GRANT ALL PRIVILEGES ON $DB_NAME.* TO $DB_USER@localhost IDENTIFIED BY '$DB_PASS';\n
+    FLUSH PRIVILEGES;" | mysql -u root --password=$DB_ROOT_PASS
+else
+    echo '### existing postgres database found ###'
+    sed -i "s|max_allowed_packet\s*=\s*1M|max_allowed_packet = $MAX_ALLOWED_PACKET|g" /etc/mysql/my.cnf
+    sed -i "s|max_allowed_packet\s*=\s*16M|max_allowed_packet = $MAX_ALLOWED_PACKET|g" /etc/mysql/my.cnf
+    echo '### starting database server ###'
+    mysqld_safe --datadir="$DB_DATA_PATH" --timezone="$NC_TIME" &
+    sleep 2
+fi 
 
 if [ ! -e /srv/installed ]; then
     echo "### set timezone to $NC_TIME ###"
     ln -sf /usr/share/zoneinfo/$NC_TIME /etc/localtime
  
-    echo '### symlinking mounts ###'
-    mkdir -m 0750 -p /nextcloud/data /nextcloud/apps /nextcloud/config
-    link /var/www/localhost/htdocs/data /nextcloud/data
-    link /var/www/localhost/htdocs/apps2 /nextcloud/apps
-    link /var/www/localhost/htdocs/config /nextcloud/config
- 
     echo '### copying templates from /tpl ###'
-    # usethis variable to write he dollar e.g.: 
-    #    $config = $bash_var; 
-    # goes to  
-    #    ${D}config = $bash_var;
-    # where config is a php variable set to the content of the bash variable "$bash_var"
-    export D='$'
-    if [ -e "/nextcloud/config/config.php" ]; then
-        # dont copy configs if they are already mounted
-        rm -f "/tpl/$NC_WWW/config/config.php"
-        rm -f "/tpl/$NC_WWW/config/autoconfig.php"
-    fi   
+    # copy /tpl/<path> to /<path>
+    # substitute {var} by the value of the environment variable $var 
     for tpl in $(find /tpl -type f); do 
         destination=${tpl#/tpl}
         echo "$tpl >> $destination"
         mkdir -p "${destination%/*}"
-        echo "$(envsubst < $tpl)" > "$destination"
+        cp -f $tpl $destination
+        for i in $(env |grep -E 'NC_|DB_'); do
+            var="{${i%%=*}}"
+            val=${i##*=}
+            sed -i "s|$var|$val|g" $destination
+        done
     done
 
     echo '### configuring apache ###'
-    chown -R apache:apache /nextcloud/data /nextcloud/apps /nextcloud/config
+    chown -R apache:apache /etc/nextcloud
     sed -i 's/ServerAdmin.*$/ServerAdmin '"$NC_EMAIL"'/g' /etc/apache2/httpd.conf 
     sed -i 's/^#ServerName.*$/ServerName '"$NC_DOMAIN"'/g' /etc/apache2/httpd.conf
 
@@ -93,7 +70,6 @@ if [ ! -e /srv/installed ]; then
     find $NC_WWW/ -type f -print0 | xargs -0 chmod 0640
     find $NC_WWW/ -type d -print0 | xargs -0 chmod 0750
     chown -R apache:apache $NC_WWW/
-    chmod +x $NC_WWW/occ
     if [ -f $NC_WWW/.htaccess ]; then
       chmod -c 0644 $NC_WWW/.htaccess
       chown -c apache:apache $NC_WWW/.htaccess
@@ -105,7 +81,6 @@ if [ ! -e /srv/installed ]; then
 
     echo '### Gratulations! Point your browser to your new nextcloud instance. ###'
     touch /srv/installed
-
 fi
 
 exec $@

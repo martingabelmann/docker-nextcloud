@@ -9,11 +9,11 @@ build:
           sleep 1 && ((c=c+1)) && ((c!=40))
       done;
     - docker logs nc
-    - docker exec --user apache nc occ --no-ansi maintenance:install --database mysql --database-name nextcloud_db --database-user nextcloud --database-pass changemepls --admin-user admin --admin-pass changemepls || true
+    - docker exec --user apache nc ./occ --no-ansi maintenance:install --database mysql --database-name nextcloud_db --database-user nextcloud --database-pass changemepls --admin-user admin --admin-pass changemepls || true
     - sleep 3
-    - docker exec --user apache nc occ --no-ansi status
+    - docker exec --user apache nc ./occ --no-ansi status
     - docker exec nc cat /var/log/apache2/error.log
     - docker exec nc cat /var/log/apache2/ssl_error.log
-    - docker exec nc cat /nextcloud/data/nextcloud.log
+    - docker exec nc cat /var/lib/nextcloud/data/nextcloud.log
     - >
-      docker exec --user apache nc occ --no-ansi status |& grep "installed: true"
+      docker exec --user apache nc ./occ --no-ansi status |& grep "installed: true"
