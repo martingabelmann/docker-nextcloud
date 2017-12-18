@@ -7,11 +7,12 @@ $CONFIG = array (
             "writable" => false,
         ),
         1 => array (
-            "path"     => "{NC_WWW}/apps2",
-            "url"      => "/apps2",
+            "path"     => "/var/lib/nextcloud/apps",
+            "url"      => "/apps-appstore",
             "writable" => true,
         )
     ),
+    'updatechecker' => false,
     'trusted_domains' => array ({NC_TRUSTED_DOMAINS}),
     'datadirectory' => '{NC_DATADIR}',
     'default_language' => '{NC_LANGUAGE}',
