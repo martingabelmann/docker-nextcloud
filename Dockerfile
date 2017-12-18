@@ -44,15 +44,19 @@ RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/re
             php7-json php7-pdo_mysql php7-mcrypt php7-intl php7-apcu php7-openssl php7-fileinfo \
             php7-curl php7-zip php7-mbstring php7-dom php7-xmlreader php7-ctype php7-zlib apcupsd \
             php7-iconv php7-xmlrpc php7-simplexml php7-xmlwriter php7-pcntl php7-ldap php7-opcache \ 
-            nextcloud-mysql php7-ldap nextcloud-ldap nextcloud-videoplayer \
-            nextcloud-gallery nextcloud-pdfviewer nextcloud-password_policy \
-            nextcloud-activity nextcloud-texteditor nextcloud-doc \
+            nextcloud-mysql php7-ldap nextcloud-default-apps nextcloud-user_ldap nextcloud-files_videoplayer \
+            nextcloud-gallery nextcloud-files_pdfviewer nextcloud-files_external nextcloud-password_policy \
+            nextcloud-activity nextcloud-files_texteditor nextcloud-doc \
             nextcloud-notifications nextcloud-logreader nextcloud-encryption \
             spreed-webrtc@testing &&\
     /usr/bin/install -g apache -m 775  -d /run/apache2 &&\
     /usr/bin/install -g mysql -m 775  -d /run/mysqld &&\
     rm -rf $NC_WWW &&\
     ln -s /usr/share/webapps/nextcloud $NC_WWW &&\
+    rm -f $NC_WWW/core/doc &&\ 
+    mv /usr/share/doc/nextcloud/core/ $NC_WWW/core/doc &&\
+    rm -f /usr/share/webapps/nextcloud/resources/config/ca-bundle.crt &&\
+    cp /etc/ssl/certs/ca-certificates.crt /usr/share/webapps/nextcloud/resources/config/ca-bundle.crt &&\  
     chown -R apache:apache $NC_WWW &&\
     sed -i '/proxy_module/s/^#//g' /etc/apache2/httpd.conf &&\
     sed -i '/proxy_connect_module/s/^#//g' /etc/apache2/httpd.conf &&\
@@ -74,16 +78,14 @@ RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/re
     echo -e 'opcache.memory_consumption=128\nopcache.save_comments=1\n' >> /etc/php7/conf.d/00_opcache.ini &&\
     echo -e 'opcache.interned_strings_buffer=8\nopcache.revalidate_freq=1' >> /etc/php7/conf.d/00_opcache.ini &&\
     ln -s /var/www/localhost/htdocs/occ /usr/local/bin/occ &&\
-    chmod +x /usr/share/webapps/nextcloud/occ &&\ 
-    mv /usr/share/doc/nextcloud/core/doc $NC_WWW/core/ &&\
+    chmod +x /usr/share/webapps/nextcloud/occ &&\
     rm -f /etc/nextcloud/config.php
 
 
 ADD nc-install /usr/local/bin/nc-install
 ADD tpl /tpl
 
-VOLUME "/var/lib/nextcloud/data"
-VOLUME "/$NC_WWW/apps2"
+VOLUME "/var/lib/nextcloud"
 VOLUME "/tpl"
 
 EXPOSE 80 443
