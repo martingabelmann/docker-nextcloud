@@ -53,7 +53,7 @@ if [ ! -e /srv/installed ]; then
         cp -f $tpl $destination
         for i in $(env |grep -E 'NC_|DB_'); do
             var="{${i%%=*}}"
-            val=${i##*=}
+            val="${i##*=}"
             sed -i "s|$var|$val|g" $destination
         done
     done
