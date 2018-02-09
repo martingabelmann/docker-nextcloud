@@ -34,9 +34,9 @@ ENV DB_TYPE=mysql \
     NC_MAIL_SMTPNAME=admin@localhost \
     NC_MAIL_SMTPSECURE=ssl \
     NC_MAIL_SMTPPASSWORD=changemepls \
-    SSL_CERTIFICATE="/etc/ssl/apache2/server.pem" \
-    SSL_CHAIN="/etc/ssl/apache2/server.pem" \
-    SSL_KEY="/etc/ssl/apache2/server.key"
+    NC_SSL_CERTIFICATE="/etc/ssl/apache2/server.pem" \
+    NC_SSL_CHAIN="/etc/ssl/apache2/server.pem" \
+    NC_SSL_KEY="/etc/ssl/apache2/server.key"
 
 
 WORKDIR "$NC_WWW"
