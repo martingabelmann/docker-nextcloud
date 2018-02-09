@@ -78,6 +78,7 @@ if [ ! -e /srv/installed ]; then
       chmod -c 0644 $NC_WWW/data/.htaccess
       chown -c apache:apache $NC_WWW/data/.htaccess
     fi
+    chmod +x $NC_WWW/occ
 
     echo '### Gratulations! Point your browser to your new nextcloud instance. ###'
     touch /srv/installed
