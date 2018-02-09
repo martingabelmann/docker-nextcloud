@@ -39,7 +39,7 @@ WORKDIR "$NC_WWW"
    
 RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories &&\
     apk update && apk upgrade &&\
-    apk add mariadb mariadb-client tzdata openssl ca-certificates apache2 apache2-ssl gettext \
+    apk add mariadb mariadb-client tzdata openssl openldap-clients ca-certificates apache2 apache2-ssl gettext \
             php7 php7-apache2 php7-gd php7-memcached php7-imagick php7-bz2 php7-posix \
             php7-json php7-pdo_mysql php7-mcrypt php7-intl php7-apcu php7-openssl php7-fileinfo \
             php7-curl php7-zip php7-mbstring php7-dom php7-xmlreader php7-ctype php7-zlib apcupsd \
@@ -86,6 +86,7 @@ ADD nc-install /usr/local/bin/nc-install
 ADD tpl /tpl
 
 VOLUME "/var/lib/nextcloud"
+VOLUME "/var/lib/mysql"
 VOLUME "/tpl"
 
 EXPOSE 80 443
