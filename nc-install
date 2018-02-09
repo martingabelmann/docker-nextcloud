@@ -69,8 +69,8 @@ if [ ! -e /srv/installed ]; then
     mkdir -p $NC_WWW/assets
     find $NC_WWW/ -type f -print0 | xargs -0 chmod 0640
     find $NC_WWW/ -type d -print0 | xargs -0 chmod 0750
-    find $NC_DATADIR/ -type d -print0 | xargs -0 chmod 0750
-    find $NC_DATADIR/ -type f -print0 | xargs -0 chmod 0640
+    find $NC_DATADIR/ -type d -print0 | xargs -0 chmod 0750 || true
+    find $NC_DATADIR/ -type f -print0 | xargs -0 chmod 0640 || true
     chown -R apache:apache $NC_WWW/
     if [ -f $NC_WWW/.htaccess ]; then
       chmod -c 0644 $NC_WWW/.htaccess
